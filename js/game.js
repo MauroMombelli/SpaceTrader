@@ -1,3 +1,8 @@
+"use strict";
+
+
+var map = new Map();
+
 // Create the canvas
 var canvas = document.createElement("canvas");
 var ctx = canvas.getContext("2d");
@@ -23,7 +28,7 @@ monsterImage.src = "images/monster.png";
 
 // Game objects
 var hero = {
-	acceleration: 10,
+	acceleration: 1,
 	speedX: 0,
 	speedY: 0,
 	maxSpeed: 100,
@@ -42,6 +47,7 @@ var reset = function () {
 	monster.y = 32 + (Math.random() * (canvas.height - 64));
 };
 
+var pauseKey = "P".charCodeAt(0);
 var trustUp = "W".charCodeAt(0);
 var trustDown = "S".charCodeAt(0);
 var rotateLeft = "A".charCodeAt(0);
@@ -80,23 +86,6 @@ var update = function (deltaT) {
 	// calculate position
 	hero.x += hero.speedX;
 	hero.y += hero.speedY;
-	// limit position to canvas
-	if (hero.x < 0){
-		hero.x = 0;
-		hero.speedX *= -1;
-	}
-	if (hero.x > canvas.width){
-		hero.x = canvas.width;
-		hero.speedX *= -1;
-	}
-	if (hero.y < 0){
-		hero.y = 0;
-		hero.speedY *= -1;
-	}
-	if (hero.y > canvas.height){
-		hero.y = canvas.height;
-		hero.speedY *= -1;
-	}
 	
 	// Are they touching?
 	if (
@@ -110,18 +99,27 @@ var update = function (deltaT) {
 	}
 };
 
+function drawAndCollide(ctx, monsterImage, hero){
+	
+	this.execute = function(planet){
+		drawRotatedImage(ctx, monsterImage, planet.coordinate.x - hero.x + canvas.width/2, planet.coordinate.y - hero.y + canvas.height/2, 0);
+	}
+}
+
+var mapCallback = new drawAndCollide(ctx, monsterImage, hero);
+
 // Draw everything
 var render = function (deltaT) {
 	//black background
 	ctx.fillStyle="black";
-	ctx.fillRect(0,0, canvas.width, canvas.height);
-	
-	if (heroReady) {
-		drawRotatedImage(ctx, heroImage, hero.x, hero.y, hero.angle);
-	}
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
 	
 	if (monsterReady) {
-		drawRotatedImage(ctx, monsterImage, monster.x, monster.y, monster.angle);
+		map.executeForSubMap(Math.round(hero.x)-canvas.width/2, Math.round(hero.y)-canvas.height/2, Math.round(hero.x)+canvas.width/2, Math.round(hero.y)+canvas.height/2, mapCallback);
+	}
+	
+	if (heroReady) {
+		drawRotatedImage(ctx, heroImage, canvas.width/2, canvas.height/2, hero.angle);
 	}
 	
 	// Score
@@ -129,17 +127,25 @@ var render = function (deltaT) {
 	ctx.font = "24px Helvetica";
 	ctx.textAlign = "left";
 	ctx.textBaseline = "top";
-	ctx.fillText("Goblins caught: " + monstersCaught, 32, 32);
+	ctx.fillText("coordinate: " + hero.x + " " + hero.y, 32, 32);
 	ctx.fillText("FPS: " + 1/deltaT, 32, 64);
 };
+
+var pause = false;
 
 // The main game loop
 var main = function () {
 	var now = Date.now();
 	var delta = (now - then) / 1000;
 	
-	update(delta);
-	render(delta);
+	if (pauseKey in keysDown) {
+		pause = !pause;
+	}
+	
+	if (!pause) {
+		update(delta);
+		render(delta);
+	}
 	
 	then = now;
 	

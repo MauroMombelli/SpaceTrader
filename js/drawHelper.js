@@ -1,3 +1,5 @@
+"use strict";
+
 function drawRotatedImage(context, image, x, y, angleRadians) { 
 	
 	// save the current co-ordinate system 
