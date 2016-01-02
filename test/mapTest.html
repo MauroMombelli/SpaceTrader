@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Simple Canvas Game</title>
+	</head>
+	<body>
+		<script src="../js/map.js"></script>
+		<script>
+"use strict";
+
+var map = new Map();
+
+function drawAndCollide(){
+	this.found = 0;
+	
+	this.execute = function(planet){
+		this.found++;
+	}
+}
+
+var mapCallback = new drawAndCollide();
+
+var time = Date.now();
+for (var i=0; i < 10; i++){
+	map.executeForSubMap1(0, 0, 800, 800, mapCallback);
+}
+time = Date.now() - time;
+console.log("sub1: found "+mapCallback.found+" in: "+time);
+
+mapCallback.found=0;
+var time = Date.now();
+for (var i=0; i < 10; i++){
+	map.executeForSubMap2(0, 0, 800, 800, mapCallback);
+}
+time = Date.now() - time;
+
+console.log("sub2: found "+mapCallback.found+" in: "+time);
+
+		</script>
+	</body>
+</html>
