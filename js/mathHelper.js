@@ -32,7 +32,6 @@ function followTarget(hero, target, deltaT){
 	
 	if (rot_correction > -0.0001 && rot_correction < 0.0001){
 		rot_correction = 0;
-		rotOk = true;
 	}
 	
 	if (rot_correction != 0){
