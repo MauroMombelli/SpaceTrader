@@ -26,6 +26,14 @@ monsterImage.onload = function () {
 };
 monsterImage.src = "images/monster.png";
 
+// Target image
+var targetReady = false;
+var targetImage = new Image();
+targetImage.onload = function () {
+	targetReady = true;
+};
+targetImage.src = "images/target.png";
+
 // Game objects
 var hero = {
 	maxSpeed: 200,
@@ -115,53 +123,7 @@ var update = function (deltaT) {
 	}
 	
 	if (target){
-		var target_angle = Math.atan2(target.y-hero.y, target.x-hero.x) + Math.PI/2;
-		var rot_correction = target_angle - hero.angle;
-		if (rot_correction > Math.PI){
-			rot_correction -= Math.PI*2;
-		}
-		if (rot_correction < -Math.PI){
-			rot_correction += Math.PI*2;
-		}
-		if (rot_correction > -0.0001 && rot_correction < 0.0001){
-			rot_correction = 0;
-		}
-		console.debug(target.x+","+target.y+" correction: "+rot_correction+" "+hero.angle+" "+target_angle);
-		
-		rot_correction *= deltaT;
-		
-		if (rot_correction != 0){
-			console.debug("rot_correction" + rot_correction);
-			if (rot_correction > hero.rotationSpeed*deltaT){
-				rot_correction = hero.rotationSpeed*deltaT;
-			}
-			if (rot_correction < -hero.rotationSpeed*deltaT){
-				rot_correction = -hero.rotationSpeed*deltaT;
-			}
-			hero.angle += rot_correction;
-			while(hero.angle > Math.PI){
-				hero.angle -= Math.PI*2;
-			}
-			while(hero.angle < -Math.PI){
-				hero.angle += Math.PI*2;
-			}
-		}
-		
-		var distanceSquared = Math.exp(target.x-target.x, 2) + Math.exp(target.y-target.y, 2);
-		if (distanceSquared > -0.0001 && distanceSquared < 0.0001){
-			distanceSquared = 0;
-		}
-		
-		if (distanceSquared > hero.maxSpeed){
-			distanceSquared = hero.maxSpeed;
-		}
-		if (distanceSquared < -hero.maxSpeed){
-			distanceSquared = -hero.maxSpeed;
-		}
-		
-		hero.x += distanceSquared * Math.cos(hero.angle - Math.PI/2);
-		hero.y += distanceSquared * Math.sin(hero.angle - Math.PI/2);
-	
+		followTarget(hero, target, deltaT);
 	}
 	
 	// Are they touching?
@@ -199,8 +161,8 @@ var render = function (deltaT) {
 		drawRotatedImage(ctx, heroImage, canvas.width/2, canvas.height/2, hero.angle);
 	}
 	
-	if (target) {
-		drawRotatedImage(ctx, heroImage, target.x - hero.x + canvas.width/2, target.y - hero.y + canvas.height/2, 0);
+	if (targetReady && target) {
+		drawRotatedImage(ctx, targetImage, target.x - hero.x + canvas.width/2, target.y - hero.y + canvas.height/2, 0);
 	}
 	
 	// Score
