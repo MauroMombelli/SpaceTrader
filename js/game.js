@@ -28,10 +28,7 @@ monsterImage.src = "images/monster.png";
 
 // Game objects
 var hero = {
-	acceleration: 1,
-	speedX: 0,
-	speedY: 0,
-	maxSpeed: 100,
+	maxSpeed: 200,
 	rotationSpeed: 1.57, // movement in rad per second
 	x:0,
 	y:0,
@@ -52,11 +49,15 @@ var trustUp = "W".charCodeAt(0);
 var trustDown = "S".charCodeAt(0);
 var rotateLeft = "A".charCodeAt(0);
 var rotateRight = "D".charCodeAt(0);
+var keyPause = "P".charCodeAt(0);
+
+var target;
 
 console.log("w"+trustUp+" "+trustDown);
 
 // Update game objects
 var update = function (deltaT) {
+	/*
 	var speed = 0;
 	
 	if (rotateLeft in keysDown) { // Player holding q
@@ -86,6 +87,82 @@ var update = function (deltaT) {
 	// calculate position
 	hero.x += hero.speedX;
 	hero.y += hero.speedY;
+	
+	// limit position to canvas
+	if (hero.x < 0){
+		hero.x = 0;
+		hero.speedX *= -1;
+	}
+	if (hero.x > canvas.width){
+		hero.x = canvas.width;
+		hero.speedX *= -1;
+	}
+	if (hero.y < 0){
+		hero.y = 0;
+		hero.speedY *= -1;
+	}
+	if (hero.y > canvas.height){
+		hero.y = canvas.height;
+		hero.speedY *= -1;
+	}
+	*/
+	if (mouseClick){
+		target = {};
+		//coordinate of math and map are different, thake that into account
+		target.x = hero.x + mouseClick.x - canvas.width/2;
+		target.y = hero.y + mouseClick.y - canvas.height/2;
+		mouseClick = undefined;
+	}
+	
+	if (target){
+		var target_angle = Math.atan2(target.y-hero.y, target.x-hero.x) + Math.PI/2;
+		var rot_correction = target_angle - hero.angle;
+		if (rot_correction > Math.PI){
+			rot_correction -= Math.PI*2;
+		}
+		if (rot_correction < -Math.PI){
+			rot_correction += Math.PI*2;
+		}
+		if (rot_correction > -0.0001 && rot_correction < 0.0001){
+			rot_correction = 0;
+		}
+		console.debug(target.x+","+target.y+" correction: "+rot_correction+" "+hero.angle+" "+target_angle);
+		
+		rot_correction *= deltaT;
+		
+		if (rot_correction != 0){
+			console.debug("rot_correction" + rot_correction);
+			if (rot_correction > hero.rotationSpeed*deltaT){
+				rot_correction = hero.rotationSpeed*deltaT;
+			}
+			if (rot_correction < -hero.rotationSpeed*deltaT){
+				rot_correction = -hero.rotationSpeed*deltaT;
+			}
+			hero.angle += rot_correction;
+			while(hero.angle > Math.PI){
+				hero.angle -= Math.PI*2;
+			}
+			while(hero.angle < -Math.PI){
+				hero.angle += Math.PI*2;
+			}
+		}
+		
+		var distanceSquared = Math.exp(target.x-target.x, 2) + Math.exp(target.y-target.y, 2);
+		if (distanceSquared > -0.0001 && distanceSquared < 0.0001){
+			distanceSquared = 0;
+		}
+		
+		if (distanceSquared > hero.maxSpeed){
+			distanceSquared = hero.maxSpeed;
+		}
+		if (distanceSquared < -hero.maxSpeed){
+			distanceSquared = -hero.maxSpeed;
+		}
+		
+		hero.x += distanceSquared * Math.cos(hero.angle - Math.PI/2);
+		hero.y += distanceSquared * Math.sin(hero.angle - Math.PI/2);
+	
+	}
 	
 	// Are they touching?
 	if (
@@ -122,27 +199,32 @@ var render = function (deltaT) {
 		drawRotatedImage(ctx, heroImage, canvas.width/2, canvas.height/2, hero.angle);
 	}
 	
+	if (target) {
+		drawRotatedImage(ctx, heroImage, target.x - hero.x + canvas.width/2, target.y - hero.y + canvas.height/2, 0);
+	}
+	
 	// Score
 	ctx.fillStyle = "rgb(250, 250, 250)";
 	ctx.font = "24px Helvetica";
 	ctx.textAlign = "left";
 	ctx.textBaseline = "top";
-	ctx.fillText("coordinate: " + hero.x + " " + hero.y, 32, 32);
+	ctx.fillText("Coordinate: " + hero.x +","+hero.y+" angle:"+hero.angle, 32, 32);
 	ctx.fillText("FPS: " + 1/deltaT, 32, 64);
 };
 
 var pause = false;
 
 // The main game loop
+var pause = false;
 var main = function () {
 	var now = Date.now();
 	var delta = (now - then) / 1000;
 	
-	if (pauseKey in keysDown) {
+	if (keyPause in keysDown) {
 		pause = !pause;
+		console.log("game in pause: "+pause);
 	}
-	
-	if (!pause) {
+	if (!pause){
 		update(delta);
 		render(delta);
 	}
